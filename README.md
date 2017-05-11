@@ -21,3 +21,4 @@
     variance introduced by outliers: 87% (severely inflated)
 
 
+![Transitions Diagram](transitions.png)
