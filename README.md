@@ -1,5 +1,7 @@
 # json-validator
 
+Sample results of `stack build --file-watch --exec 'json-validator-exe --regress allocated:iters +RTS -T'`:
+
     benchmarking aeson/testEvent
     time                 30.41 μs   (29.55 μs .. 31.74 μs)
                          0.978 R²   (0.968 R² .. 0.986 R²)
