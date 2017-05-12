@@ -449,8 +449,8 @@ isValidJson bs = case finalState of
       | nextByte     == 0x00 -> alreadyFailed
 
       | parseFailed ->
-          if currentState `elem` [ aValueWithinArray  makeAutomaton
-                                 , aValueWithinObject makeAutomaton ]
+          if   currentState == aValueWithinArray  makeAutomaton
+            || currentState == aValueWithinObject makeAutomaton
           then if nextStateInner == 0
                   then alreadyFailed
                   else AutomatonState 0x01 nextStateInner (currentState : stack)
