@@ -465,6 +465,7 @@ isValidJson bs = case finalState of
       | otherwise -> AutomatonState 0x01 nextState stack
 
     where
+    {-# INLINE nextState #-}
     nextState      = aTransitionsTable makeAutomaton AU.! (currentState, nextByte)
     nextStateInner = aTransitionsTable makeAutomaton AU.! (0,            nextByte)
     parseFailed   = nextState == 0 && currentState /= 0
