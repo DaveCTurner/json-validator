@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Automaton
-  ghc-options:         -ddump-simpl -ddump-stg -ddump-cmm -ddump-to-file -O2 -ticky
+  ghc-options:         -ddump-simpl -ddump-stg -ddump-cmm -ddump-to-file -O2 -ticky -ticky-allocd
   build-depends:       base >= 4.7 && < 5
     , bytestring
     , containers
@@ -29,7 +29,7 @@ library
 executable json-validator-exe
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -ddump-stg -ddump-simpl -ddump-cmm -ddump-to-file -ticky -O2
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -ddump-stg -ddump-simpl -ddump-cmm -ddump-to-file -O2 -ticky -ticky-allocd
   build-depends:       base
     , bytestring
     , text
