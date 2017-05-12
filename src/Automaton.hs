@@ -443,7 +443,7 @@ isValidJson bs = case finalState of
   finalState = BL.foldl' step (AutomatonState 0x01 0 []) bs
 
   step s@(AutomatonState stillParsing currentState stack) nextByte
-    = nextState `seq` if
+    = if
 
       | stillParsing == 0x00 -> alreadyFailed
       | nextByte     == 0x00 -> alreadyFailed
