@@ -375,8 +375,11 @@ data Automaton = Automaton
     -- If the parse finishes in this state then done. If there are more
     -- characters after reaching this state then it fails.
 
-  , aValueWithinArray :: {-# UNPACK #-} !Word8
-    -- At this state, we are within an array, so expect an inner value
+  , aFirstValueWithinArray :: {-# UNPACK #-} !Word8
+    -- At this state, we are within an array at the very start, so expect an inner value
+
+  , aSubsequentValueWithinArray :: {-# UNPACK #-} !Word8
+    -- At this state, we are within an array after a comma, so expect an inner value
 
   , aValueWithinObject :: {-# UNPACK #-} !Word8
     -- At this state, we are within an object, so expect an inner value
@@ -391,11 +394,18 @@ makeAutomaton = Automaton
       state1 = transitionsTable AU.! (state0, _bracketleft)
       state2 = transitionsTable AU.! (state1, _bracketright)
       in state2
-  , aValueWithinArray = let
+  , aFirstValueWithinArray = let
       -- Parse into an array '['
       state0 = 0
       state1 = transitionsTable AU.! (state0, _bracketleft)
       in state1
+  , aSubsequentValueWithinArray = let
+      -- Parse into an array '[0,'
+      state0 = 0
+      state1 = transitionsTable AU.! (state0, _bracketleft)
+      state2 = transitionsTable AU.! (state1, _0)
+      state3 = transitionsTable AU.! (state2, _comma)
+      in state3
   , aValueWithinObject = let
       -- Parse into an object '{"":'
       state0 = 0
@@ -451,8 +461,9 @@ isValidJson bs = case finalState of
       | nextByte     == 0x00 -> alreadyFailed
 
       | parseFailed ->
-          if   currentState == aValueWithinArray  makeAutomaton
-            || currentState == aValueWithinObject makeAutomaton
+          if   currentState == aFirstValueWithinArray       makeAutomaton
+            || currentState == aSubsequentValueWithinArray  makeAutomaton
+            || currentState == aValueWithinObject           makeAutomaton
           then if nextStateInner == 0
                   then alreadyFailed
                   else AutomatonState 0x01 nextStateInner (currentState : stack)
