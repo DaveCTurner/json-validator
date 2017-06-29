@@ -26,7 +26,7 @@ data TransitionGraph l
   | Optional       (TransitionGraph l) l
   | OrElse         (TransitionGraph l) (TransitionGraph l) l
   | Many           (TransitionGraph l)
-  | CommaSeparated (TransitionGraph l) l l
+  | CommaSeparated l (TransitionGraph l) l
   | InnerValue                         l l
   deriving (Show, Eq)
 
@@ -126,13 +126,13 @@ unicodeEscape = char 'u'
 
 object :: TransitionGraph ()
 object = char '{'
-  `Then` CommaSeparated
-            (string `Then` char ':' `Then` value) () ()
+  `Then` CommaSeparated ()
+            (string `Then` char ':' `Then` value) ()
   `Then` char '}'
 
 array :: TransitionGraph ()
 array = char '['
-  `Then` CommaSeparated value () ()
+  `Then` CommaSeparated () value ()
   `Then` char ']'
 
 topLevelValue :: TransitionGraph ()
@@ -168,7 +168,8 @@ labelStates g0 = evalState (go g0) 0
   go (Optional g ())          = Optional       <$> go g            <*> nextLabel
   go (OrElse g1 g2 ())        = OrElse         <$> go g1 <*> go g2 <*> nextLabel
   go (Many g)                 = Many           <$> go g
-  go (CommaSeparated g () ()) = CommaSeparated <$> go g            <*> nextLabel <*> nextLabel
+  go (CommaSeparated () g ()) = CommaSeparated <$> nextLabel
+                                                         <*> go g <*> nextLabel
   go (InnerValue       () ()) = InnerValue     <$> nextLabel       <*> nextLabel
 
 startLabel :: TransitionGraph l -> l
@@ -177,8 +178,8 @@ startLabel (Then     g _)         = startLabel g
 startLabel (Optional g _)         = startLabel g
 startLabel (OrElse   g _ _)       = startLabel g
 startLabel (Many     g)           = startLabel g
-startLabel (CommaSeparated _ l _) = l
-startLabel (InnerValue       l _) = l
+startLabel (CommaSeparated l _ _) = l
+startLabel (InnerValue     l _)   = l
 
 finalLabel :: TransitionGraph l -> l
 finalLabel (ConsumeRanges _ _ l)  = l
@@ -197,7 +198,7 @@ allLabels = execWriter . go
   go (Optional g l)           = tell [l] >> go g
   go (OrElse g1 g2 l)         = tell [l] >> go g1    >> go g2
   go (Many g)                 = go g
-  go (CommaSeparated g l1 l2) = tell [l1, l2] >> go g
+  go (CommaSeparated l1 g l2) = tell [l1, l2] >> go g
   go (InnerValue l1 l2)       = tell [l1, l2]
 
 automaton :: TransitionGraph Int
@@ -261,7 +262,7 @@ transitionEdgesBeforeCollapse = execWriter $ do
   go (Many g)           = do go g
                              tell [InternalTransition (finalLabel g) "*" (startLabel g)]
 
-  go (CommaSeparated g l1 l2)
+  go (CommaSeparated l1 g l2)
                         = do go g
                              tell [InternalTransition l1  "{}" l2]
                              tell [InternalTransition l1 "~{}" (startLabel g)]
