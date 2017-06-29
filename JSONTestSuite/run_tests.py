@@ -117,6 +117,8 @@ def run_tests(restrict_to_path=None, restrict_to_program=None):
                     s = "%s\tIMPLEMENTATION_PASS\t%s" % (prog_name, filename)
                 elif filename.startswith("i_") and result != "PASS":
                     s = "%s\tIMPLEMENTATION_FAIL\t%s" % (prog_name, filename)
+                elif filename.startswith("k_") and result != "PASS":
+                    s = "%s\tKNOWN_FAILURE\t%s" % (prog_name, filename)
 
                 if s != None:
                     print(s)
@@ -167,7 +169,9 @@ def f_status_for_lib_for_file(json_dir, results_dir):
         "IMPLEMENTATION_FAIL",
         "IMPLEMENTATION_PASS",
 
-        "TIMEOUT"
+        "TIMEOUT",
+
+        "KNOWN_FAILURE"
     ]
 
     d = {}
@@ -214,7 +218,9 @@ def f_status_for_path_for_lib(json_dir, results_dir):
         "IMPLEMENTATION_FAIL",
         "IMPLEMENTATION_PASS",
 
-        "TIMEOUT"
+        "TIMEOUT",
+
+        "KNOWN_FAILURE"
 
     ]
 
