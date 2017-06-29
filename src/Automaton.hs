@@ -27,7 +27,7 @@ data TransitionGraph l
   | OrElse         (TransitionGraph l) (TransitionGraph l) l
   | Many           (TransitionGraph l)
   | CommaSeparated (TransitionGraph l) l l
-  | InnerValue l l
+  | InnerValue                         l l
   deriving (Show, Eq)
 
 word8FromChar :: Char -> Word8
@@ -164,41 +164,41 @@ labelStates g0 = evalState (go g0) 0
                                             <$> nextLabel <*> pure ranges
                                                                 <*> nextLabel
 
-  go (Then g1 g2)          = Then           <$> go g1 <*> go g2
-  go (Optional g ())       = Optional       <$> go g            <*> nextLabel
-  go (OrElse g1 g2 ())     = OrElse         <$> go g1 <*> go g2 <*> nextLabel
-  go (Many g)              = Many           <$> go g
+  go (Then g1 g2)             = Then           <$> go g1 <*> go g2
+  go (Optional g ())          = Optional       <$> go g            <*> nextLabel
+  go (OrElse g1 g2 ())        = OrElse         <$> go g1 <*> go g2 <*> nextLabel
+  go (Many g)                 = Many           <$> go g
   go (CommaSeparated g () ()) = CommaSeparated <$> go g            <*> nextLabel <*> nextLabel
-  go (InnerValue () ())    = InnerValue     <$> nextLabel       <*> nextLabel
+  go (InnerValue       () ()) = InnerValue     <$> nextLabel       <*> nextLabel
 
 startLabel :: TransitionGraph l -> l
-startLabel (ConsumeRanges l _ _) = l
-startLabel (Then     g _)        = startLabel g
-startLabel (Optional g _)        = startLabel g
-startLabel (OrElse   g _ _)      = startLabel g
-startLabel (Many     g)          = startLabel g
+startLabel (ConsumeRanges l _ _)  = l
+startLabel (Then     g _)         = startLabel g
+startLabel (Optional g _)         = startLabel g
+startLabel (OrElse   g _ _)       = startLabel g
+startLabel (Many     g)           = startLabel g
 startLabel (CommaSeparated _ l _) = l
-startLabel (InnerValue l _)      = l
+startLabel (InnerValue       l _) = l
 
 finalLabel :: TransitionGraph l -> l
-finalLabel (ConsumeRanges _ _ l) = l
-finalLabel (Then     _ g)        = finalLabel g
-finalLabel (Optional _ l)        = l
-finalLabel (OrElse   _ _ l)      = l
-finalLabel (Many     g)          = startLabel g
+finalLabel (ConsumeRanges _ _ l)  = l
+finalLabel (Then     _ g)         = finalLabel g
+finalLabel (Optional _ l)         = l
+finalLabel (OrElse   _ _ l)       = l
+finalLabel (Many     g)           = startLabel g
 finalLabel (CommaSeparated _ _ l) = l
-finalLabel (InnerValue _ l)      = l
+finalLabel (InnerValue _ l)       = l
 
 allLabels :: TransitionGraph a -> [a]
 allLabels = execWriter . go
   where
-  go (ConsumeRanges l1 _ l2) = tell [l1,l2]
-  go (Then g1 g2)         = go g1    >> go g2
-  go (Optional g l)       = tell [l] >> go g
-  go (OrElse g1 g2 l)     = tell [l] >> go g1    >> go g2
-  go (Many g)             = go g
+  go (ConsumeRanges l1 _ l2)  = tell [l1,l2]
+  go (Then g1 g2)             = go g1    >> go g2
+  go (Optional g l)           = tell [l] >> go g
+  go (OrElse g1 g2 l)         = tell [l] >> go g1    >> go g2
+  go (Many g)                 = go g
   go (CommaSeparated g l1 l2) = tell [l1, l2] >> go g
-  go (InnerValue l1 l2)   = tell [l1, l2]
+  go (InnerValue l1 l2)       = tell [l1, l2]
 
 automaton :: TransitionGraph Int
 automaton = labelStates topLevelValue
@@ -244,31 +244,32 @@ transitionEdgesBeforeCollapse = execWriter $ do
   where
   go (ConsumeRanges l1 ranges l2) = tell [CharConsumingTransition l1 ranges l2]
 
-  go (Then g1 g2)         = do go g1
-                               tell [InternalTransition (finalLabel g1) "->" (startLabel g2)]
-                               go g2
+  go (Then g1 g2)       = do go g1
+                             tell [InternalTransition (finalLabel g1) "->" (startLabel g2)]
+                             go g2
 
-  go (Optional g l)       = do go g
-                               tell [InternalTransition (startLabel g) "?" l]
-                               tell [InternalTransition (finalLabel g) "^" l]
+  go (Optional g l)     = do go g
+                             tell [InternalTransition (startLabel g) "?" l]
+                             tell [InternalTransition (finalLabel g) "^" l]
 
-  go (OrElse g1 g2 l)     = do go g1
-                               go g2
-                               tell [InternalTransition (startLabel g1) "||" (startLabel g2)]
-                               tell [InternalTransition (finalLabel g1) "V" l]
-                               tell [InternalTransition (finalLabel g2) "V" l]
+  go (OrElse g1 g2 l)   = do go g1
+                             go g2
+                             tell [InternalTransition (startLabel g1) "||" (startLabel g2)]
+                             tell [InternalTransition (finalLabel g1) "V" l]
+                             tell [InternalTransition (finalLabel g2) "V" l]
 
-  go (Many g)             = do go g
-                               tell [InternalTransition (finalLabel g) "*" (startLabel g)]
+  go (Many g)           = do go g
+                             tell [InternalTransition (finalLabel g) "*" (startLabel g)]
 
-  go (CommaSeparated g l1 l2) = do
-                               go g
-                               tell [InternalTransition l1  "{}" l2]
-                               tell [InternalTransition l1 "~{}" (startLabel g)]
-                               tell [InternalTransition (finalLabel g) "EOF" l2]
-                               tell [CharConsumingTransition (finalLabel g)
-                                                             [(0x2c, 0x2c)]
-                                                             (startLabel g)]
+  go (CommaSeparated g l1 l2)
+                        = do go g
+                             tell [InternalTransition l1  "{}" l2]
+                             tell [InternalTransition l1 "~{}" (startLabel g)]
+                             tell [InternalTransition (finalLabel g) "EOF" l2]
+                             tell [CharConsumingTransition (finalLabel g)
+                                                           [(0x2c, 0x2c)]
+                                                           (startLabel g)]
+
   go (InnerValue l1 l2) = tell [CharConsumingTransition l1 [(0,0)] l2]
 
 relabelling :: Int -> Maybe Int
