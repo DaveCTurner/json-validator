@@ -21,13 +21,13 @@ import           Text.Printf
 -- Define the graph of states and transitions
 
 data TransitionGraph l
-  = ConsumeRanges l [(Word8, Word8)] l
-  | Then           (TransitionGraph l) (TransitionGraph l)
-  | Optional       (TransitionGraph l) l
-  | OrElse         (TransitionGraph l) (TransitionGraph l) l
-  | Many           (TransitionGraph l)
+  = ConsumeRanges  l [(Word8, Word8)]    l
+  | Then             (TransitionGraph l) (TransitionGraph l)
+  | Optional         (TransitionGraph l) l
+  | OrElse           (TransitionGraph l) (TransitionGraph l) l
+  | Many             (TransitionGraph l)
   | CommaSeparated l (TransitionGraph l) l
-  | InnerValue                         l l
+  | InnerValue     l                     l
   deriving (Show, Eq)
 
 word8FromChar :: Char -> Word8
