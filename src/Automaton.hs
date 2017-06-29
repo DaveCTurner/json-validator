@@ -468,5 +468,5 @@ isValidJson bs = case finalState of
     {-# INLINE nextState #-}
     nextState      = aTransitionsTable makeAutomaton AU.! (currentState, nextByte)
     nextStateInner = aTransitionsTable makeAutomaton AU.! (0,            nextByte)
-    parseFailed   = nextState == 0 && currentState /= 0
+    parseFailed   = nextState == 0
     parseFinished = nextState == aFinishState makeAutomaton
