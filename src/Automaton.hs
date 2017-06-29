@@ -432,7 +432,6 @@ makeAutomaton = Automaton
               , let withinCharRange (b0,b1) = b0 <= nextByte && nextByte <= b1
               , any withinCharRange rs
               ]
-              
       ]
 
 data AutomatonState
