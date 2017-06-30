@@ -140,8 +140,9 @@ array = char '['
   `Then` char ']'
 
 topLevelValue :: TransitionGraph ()
-topLevelValue = object
-       `orElse` array
+topLevelValue
+  = Optional insignificantWhitespace ()
+      `Then` (object `orElse` array)
 
 value :: TransitionGraph ()
 value    = literal "true"
