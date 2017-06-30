@@ -424,34 +424,13 @@ makeAutomaton = Automaton
   maxLabel = fromMaybe (error "no labels") $ maximum [ relabelling n | n <- allLabels automaton ]
   lbub@(lb, ub) = ((0,0), (fromIntegral maxLabel, 0xff))
 
-  spaceConsumingStates = map stateAfter
-    [ " "
-    , "[]"
-    , "["
-    , "[\"\""
-    , "[\"\","
-    , "{"
-    , "{\"\""
-    , "{\"\":"
-    , "{\"\":\"\""
-    , "{\"\":\"\","
-    ]
-
   transitionsTable
     | 0xff < maxLabel = error "too many nodes"
     | otherwise = AU.array
       lbub
       [ ((currentState, nextByte), nextState)
       | (currentState, nextByte) <- AU.range lbub
-      , let nextImplicitState
-
-              | nextByte `elem` [_tab, _lf, _cr, _space]
-              , currentState `elem` spaceConsumingStates
-                          = currentState
-
-              | otherwise = 0
-
-      , let nextState = fromMaybe nextImplicitState $ listToMaybe
+      , let nextState = fromMaybe 0 $ listToMaybe
               [ fromIntegral t
               | CharConsumingTransition s rs t <- relabelledTransitionEdges
               , fromIntegral s == currentState
