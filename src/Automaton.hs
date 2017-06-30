@@ -50,8 +50,11 @@ charRanges = consumeRanges . map (word8FromChar *** word8FromChar)
 charChoices :: String -> TransitionGraph ()
 charChoices = charRanges . map (\c -> (c, c))
 
-insignificantWhitespace :: TransitionGraph ()
-insignificantWhitespace = charChoices " \t\n\r"
+oneInsignificantWhitespace :: TransitionGraph ()
+oneInsignificantWhitespace = charChoices " \t\n\r"
+
+someInsignificantWhitespace :: TransitionGraph ()
+someInsignificantWhitespace = oneInsignificantWhitespace `Then` Many oneInsignificantWhitespace
 
 literal :: String -> TransitionGraph ()
 literal cs = foldr1 Then $ map char cs
@@ -87,7 +90,7 @@ number = Optional leadingSign    ()
   `Then` integerPart
   `Then` Optional fractionalPart ()
   `Then` Optional exponentPart   ()
-  `Then` Optional insignificantWhitespace ()
+  `Then` Optional someInsignificantWhitespace ()
 
 string :: TransitionGraph ()
 string = char '"'
@@ -130,27 +133,34 @@ unicodeEscape = char 'u'
 
 object :: TransitionGraph ()
 object = char '{'
+  `Then` Many oneInsignificantWhitespace
   `Then` CommaSeparated ()
-            (string `Then` char ':' `Then` value) ()
+              (string
+        `Then` Many oneInsignificantWhitespace
+        `Then` char ':'
+        `Then` Many oneInsignificantWhitespace
+        `Then` value) ()
   `Then` char '}'
 
 array :: TransitionGraph ()
 array = char '['
+  `Then` Many oneInsignificantWhitespace
   `Then` CommaSeparated () value ()
   `Then` char ']'
 
 topLevelValue :: TransitionGraph ()
 topLevelValue
-  = Optional insignificantWhitespace ()
+  = Optional someInsignificantWhitespace ()
       `Then` (object `orElse` array)
+      `Then` Many oneInsignificantWhitespace
 
 value :: TransitionGraph ()
-value    = literal "true"
+value    = ((literal "true"
   `orElse` literal "false"
   `orElse` literal "null"
-  `orElse` number
   `orElse` string
-  `orElse` InnerValue () ()
+  `orElse` InnerValue () ()) `Then` Many oneInsignificantWhitespace)
+  `orElse` number
 
 orElse :: TransitionGraph () -> TransitionGraph () -> TransitionGraph ()
 orElse g1 g2 = OrElse g1 g2 ()
