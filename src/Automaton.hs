@@ -394,35 +394,19 @@ data Automaton = Automaton
 
 makeAutomaton :: Automaton
 makeAutomaton = Automaton
-  { aTransitionsTable = transitionsTable
-  , aFinishState = let
-      -- Parse an empty array '[]'
-      state0 = 0
-      state1 = transitionsTable AU.! (state0, _bracketleft)
-      state2 = transitionsTable AU.! (state1, _bracketright)
-      in state2
-  , aFirstValueWithinArray = let
-      -- Parse into an array '['
-      state0 = 0
-      state1 = transitionsTable AU.! (state0, _bracketleft)
-      in state1
-  , aSubsequentValueWithinArray = let
-      -- Parse into an array '[0,'
-      state0 = 0
-      state1 = transitionsTable AU.! (state0, _bracketleft)
-      state2 = transitionsTable AU.! (state1, _0)
-      state3 = transitionsTable AU.! (state2, _comma)
-      in state3
-  , aValueWithinObject = let
-      -- Parse into an object '{"":'
-      state0 = 0
-      state1 = transitionsTable AU.! (state0, _braceleft)
-      state2 = transitionsTable AU.! (state1, _quotedbl)
-      state3 = transitionsTable AU.! (state2, _quotedbl)
-      state4 = transitionsTable AU.! (state3, _colon)
-      in state4
+  { aTransitionsTable           = transitionsTable
+  , aFinishState                = stateAfter "[]"
+  , aFirstValueWithinArray      = stateAfter "["
+  , aSubsequentValueWithinArray = stateAfter "[0,"
+  , aValueWithinObject          = stateAfter "{\"\":"
   }
   where
+  stateAfter :: String -> Word8
+  stateAfter = go 0 . map word8FromChar
+    where
+    go s []     = s
+    go s (c:cs) = go (transitionsTable AU.! (s, c)) cs
+
   maxLabel = fromMaybe (error "no labels") $ maximum [ relabelling n | n <- allLabels automaton ]
   lbub@(lb, ub) = ((0,0), (fromIntegral maxLabel, 0xff))
 
