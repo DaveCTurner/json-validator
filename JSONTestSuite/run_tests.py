@@ -23,7 +23,7 @@ programs = {
    "json-validator":
        {
            "url":"https://github.com/davecturner/json-validator",
-           "commands":["../.stack-work/install/x86_64-linux/lts-8.18/8.0.2/bin/json-test"]
+           "commands":["../.stack-work/install/x86_64-linux/lts-8.13/8.0.2/bin/json-test"]
        }
 }
 
