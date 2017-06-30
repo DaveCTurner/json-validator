@@ -102,3 +102,6 @@ Sample results of `stack build --file-watch --exec 'json-validator-exe --regress
     variance introduced by outliers: 48% (moderately inflated)
 
 ![Transitions Diagram](transitions.png)
+
+(NB this diagram doesn't include insignificant whitespace consumption
+that doesn't change to a different state)
