@@ -50,6 +50,9 @@ charRanges = consumeRanges . map (word8FromChar *** word8FromChar)
 charChoices :: String -> TransitionGraph ()
 charChoices = charRanges . map (\c -> (c, c))
 
+insignificantWhitespace :: TransitionGraph ()
+insignificantWhitespace = charChoices " \t\n\r"
+
 literal :: String -> TransitionGraph ()
 literal cs = foldr1 Then $ map char cs
 
@@ -84,6 +87,7 @@ number = Optional leadingSign    ()
   `Then` integerPart
   `Then` Optional fractionalPart ()
   `Then` Optional exponentPart   ()
+  `Then` Optional insignificantWhitespace ()
 
 string :: TransitionGraph ()
 string = char '"'
