@@ -7,9 +7,11 @@ import           Control.Arrow
 import           Control.Monad.State
 import           Control.Monad.Writer
 import qualified Data.Array           as A
+import           Data.Array.Base      (unsafeAt)
 import qualified Data.Array.Unboxed   as AU
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char
+import           Data.Ix              (index)
 import           Data.List
 import qualified Data.Map.Lazy        as M
 import           Data.Maybe
@@ -458,6 +460,11 @@ isValidJson bs = case finalState of
   where
   finalState = BL.foldl' step (AutomatonState 0x01 0 []) bs
 
+  {-# INLINE lookupTransition #-}
+  lookupTransition currentState nextByte
+    = unsafeAt arr $ index (AU.bounds arr) (currentState, nextByte)
+    where arr = aTransitionsTable makeAutomaton
+
   step s@(AutomatonState stillParsing currentState stack) nextByte
     = if
 
@@ -477,13 +484,13 @@ isValidJson bs = case finalState of
           []     -> AutomatonState 0x01 nextState []
           (s:ss) -> AutomatonState 0x01 poppedState ss
             where
-            poppedState = aTransitionsTable makeAutomaton AU.! (s, 0x00)
+            poppedState = lookupTransition s 0x00
 
       | otherwise -> AutomatonState 0x01 nextState stack
 
     where
     {-# INLINE nextState #-}
-    nextState      = aTransitionsTable makeAutomaton AU.! (currentState, nextByte)
-    nextStateInner = aTransitionsTable makeAutomaton AU.! (0,            nextByte)
+    nextState      = lookupTransition currentState nextByte
+    nextStateInner = lookupTransition 0            nextByte
     parseFailed   = nextState == 0
     parseFinished = nextState == aFinishState makeAutomaton
