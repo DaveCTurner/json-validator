@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE MultiWayIf       #-}
 
 module Automaton (showGraph, isValidJson) where
 
@@ -188,33 +188,33 @@ labelStates g0 = evalState (go g0) 0
   go (InnerValue       () ()) = InnerValue     <$> nextLabel       <*> nextLabel
 
 startLabel :: TransitionGraph l -> l
-startLabel (ConsumeRanges l _ _)  = l
-startLabel (Then     g _)         = startLabel g
-startLabel (Optional g _)         = startLabel g
-startLabel (OrElse   g _ _)       = startLabel g
-startLabel (Many     g)           = startLabel g
+startLabel (ConsumeRanges l _ _)    = l
+startLabel (Then     g _)           = startLabel g
+startLabel (Optional g _)           = startLabel g
+startLabel (OrElse   g _ _)         = startLabel g
+startLabel (Many     g)             = startLabel g
 startLabel (CommaSeparated l _ _ _) = l
-startLabel (InnerValue     l _)   = l
+startLabel (InnerValue     l _)     = l
 
 finalLabel :: TransitionGraph l -> l
-finalLabel (ConsumeRanges _ _ l)  = l
-finalLabel (Then     _ g)         = finalLabel g
-finalLabel (Optional _ l)         = l
-finalLabel (OrElse   _ _ l)       = l
-finalLabel (Many     g)           = startLabel g
+finalLabel (ConsumeRanges _ _ l)    = l
+finalLabel (Then     _ g)           = finalLabel g
+finalLabel (Optional _ l)           = l
+finalLabel (OrElse   _ _ l)         = l
+finalLabel (Many     g)             = startLabel g
 finalLabel (CommaSeparated _ _ _ l) = l
-finalLabel (InnerValue _ l)       = l
+finalLabel (InnerValue _ l)         = l
 
 allLabels :: TransitionGraph a -> [a]
 allLabels = execWriter . go
   where
-  go (ConsumeRanges l1 _ l2)  = tell [l1,l2]
-  go (Then g1 g2)             = go g1    >> go g2
-  go (Optional g l)           = tell [l] >> go g
-  go (OrElse g1 g2 l)         = tell [l] >> go g1    >> go g2
-  go (Many g)                 = go g
+  go (ConsumeRanges l1 _ l2)     = tell [l1,l2]
+  go (Then g1 g2)                = go g1    >> go g2
+  go (Optional g l)              = tell [l] >> go g
+  go (OrElse g1 g2 l)            = tell [l] >> go g1    >> go g2
+  go (Many g)                    = go g
   go (CommaSeparated l1 g l2 l3) = tell [l1, l2, l3] >> go g
-  go (InnerValue l1 l2)       = tell [l1, l2]
+  go (InnerValue l1 l2)          = tell [l1, l2]
 
 automaton :: TransitionGraph Int
 automaton = labelStates topLevelValue
@@ -375,7 +375,7 @@ showRanges rs = intercalate "," $ map showRange rs
     | otherwise = chr8 w1 ++ "-" ++ chr8 w2
 
 data Automaton = Automaton
-  { aTransitionsTable :: !(AU.Array (Word8, Word8) Word8)
+  { aTransitionsTable           :: !(AU.Array (Word8, Word8) Word8)
     -- first  index is state
     -- second index is the next character
     -- entry  is the next state
@@ -392,17 +392,17 @@ data Automaton = Automaton
     -- remember where you are and try starting again. If this succeeds
     -- then treat that like parsing a 0x00.
 
-  , aFinishState      :: {-# UNPACK #-} !Word8
+  , aFinishState                :: {-# UNPACK #-} !Word8
     -- If the parse finishes in this state then done. If there are more
     -- characters after reaching this state then it fails.
 
-  , aFirstValueWithinArray :: {-# UNPACK #-} !Word8
+  , aFirstValueWithinArray      :: {-# UNPACK #-} !Word8
     -- At this state, we are within an array at the very start, so expect an inner value
 
   , aSubsequentValueWithinArray :: {-# UNPACK #-} !Word8
     -- At this state, we are within an array after a comma, so expect an inner value
 
-  , aValueWithinObject :: {-# UNPACK #-} !Word8
+  , aValueWithinObject          :: {-# UNPACK #-} !Word8
     -- At this state, we are within an object, so expect an inner value
   } deriving (Show, Eq)
 
