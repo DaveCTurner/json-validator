@@ -3,12 +3,12 @@
 
 module Automaton (showGraph, isValidJson) where
 
-import qualified Data.ByteString.Lazy as BL
 import           Control.Arrow
 import           Control.Monad.State
 import           Control.Monad.Writer
 import qualified Data.Array           as A
 import qualified Data.Array.Unboxed   as AU
+import qualified Data.ByteString.Lazy as BL
 import           Data.Char
 import           Data.List
 import qualified Data.Map.Lazy        as M
