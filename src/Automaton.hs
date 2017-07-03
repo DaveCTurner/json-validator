@@ -3,10 +3,9 @@
 
 module Automaton (showGraph, isValidJson) where
 
-import           Control.Arrow
-import           Control.Monad.State
-import           Control.Monad.Writer
-import qualified Data.Array           as A
+import           Control.Arrow        hiding (arr)
+import           Control.Monad.State  hiding (ap)
+import           Control.Monad.Writer hiding (ap)
 import           Data.Array.Base      (unsafeAt)
 import qualified Data.Array.Unboxed   as AU
 import qualified Data.ByteString.Lazy as BL
@@ -17,7 +16,6 @@ import qualified Data.Map.Lazy        as M
 import           Data.Maybe
 import qualified Data.Set             as S
 import           Data.Word8
-import           Debug.Trace
 import           Text.Printf
 
 -- Define the graph of states and transitions
@@ -230,7 +228,7 @@ data TransitionEdge
 mapTarget :: (Int -> Int) -> TransitionEdge -> TransitionEdge
 mapTarget f (CharConsumingTransition  s r t) = CharConsumingTransition  s r (f t)
 mapTarget f (InternalTransition       s l t) = InternalTransition       s l (f t)
-mapTarget f (FinalState                   l) = FinalState l
+mapTarget _ (FinalState                   l) = FinalState l
 
 getSource :: TransitionEdge -> Int
 getSource (CharConsumingTransition  s _ _) = s
@@ -424,7 +422,7 @@ makeAutomaton = Automaton
     go s (c:cs) = go (transitionsTable AU.! (s, c)) cs
 
   maxLabel = fromMaybe (error "no labels") $ maximum [ relabelling n | n <- allLabels automaton ]
-  lbub@(lb, ub) = ((0,0), (fromIntegral maxLabel, 0xff))
+  lbub = ((0,0), (fromIntegral maxLabel, 0xff))
 
   transitionsTable
     | 0xff < maxLabel = error "too many nodes"
@@ -465,7 +463,7 @@ isValidJson bs = case finalState of
     = unsafeAt arr $ index (AU.bounds arr) (currentState, nextByte)
     where arr = aTransitionsTable makeAutomaton
 
-  step s@(AutomatonState stillParsing currentState stack) nextByte
+  step (AutomatonState stillParsing currentState stack) nextByte
     = if
 
       | stillParsing == 0x00 -> alreadyFailed
